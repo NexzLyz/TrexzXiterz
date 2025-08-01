@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toko XZ & Easy Drag</title>
+  <style>
+    :root {
+      --bg: #f0f0f0;
+      --text: #000;
+      --box: #fff;
+      --header: #3f51b5;
+      --button: #4CAF50;
+    }
+    body.dark {
+      --bg: #121212;
+      --text: #fff;
+      --box: #1e1e1e;
+      --header: #222;
+      --button: #03dac6;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    header {
+      background: var(--header);
+      color: white;
+      padding: 1em;
+      text-align: center;
+      position: relative;
+    }
+    nav a {
+      color: white;
+      margin: 0 5px;
+      text-decoration: none;
+      font-size: 0.9em;
+    }
+    .theme-dropdown {
+      position: absolute;
+      top: 1em;
+      right: 1em;
+    }
+    .theme-dropdown select {
+      padding: 5px;
+      border-radius: 5px;
+    }
+    main {
+      padding: 1em;
+    }
+    h2 {
+      margin: 1em 0 0.5em;
+    }
+    .product-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1em;
+    }
+    .product {
+      background: var(--box);
+      border-radius: 8px;
+      padding: 1em;
+      box-shadow: 0 1px 5px #0001;
+    }
+    .product h3 {
+      font-size: 1.1em;
+      margin-bottom: 5px;
+      cursor: pointer;
+    }
+    .product p {
+      margin-bottom: 5px;
+    }
+    .detail {
+      display: none;
+      font-size: 0.9em;
+      margin-top: 5px;
+      border-top: 1px dashed #ccc;
+      padding-top: 5px;
+    }
+    button {
+      width: 100%;
+      background: var(--button);
+      color: black;
+      border: none;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    ul#cartList {
+      list-style: none;
+      margin-top: 10px;
+      padding-left: 0;
+    }
+    .ai-chat {
+      margin-top: 2em;
+      border-top: 1px solid #ccc;
+      padding-top: 1em;
+    }
+    .ai-output {
+      background: var(--box);
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 0.9em;
+    }
+    footer {
+      text-align: center;
+      padding: 2em 1em;
+      font-size: 0.85em;
+      color: #888;
+    }
+    a {
+      color: #2196f3;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>LIST FILE XZ & EASY DRAG</h1>
+    <nav>
+      <a href="#">Produk</a>
+      <a href="#">Keranjang</a>
+    </nav>
+    <div class="theme-dropdown">
+      <select onchange="changeTheme(this.value)">
+        <option value="light">✨ Terang</option>
+        <option value="dark">🌜 Gelap</option>
+      </select>
+    </div>
+  </header>
+
+  <main>
+    <h2>XZ SETTING</h2>
+    <div class="product-container" id="xzList"></div>
+
+    <h2>EASY DRAG</h2>
+    <div class="product-container" id="dragList"></div>
+
+    <h2>Keranjang</h2>
+    <ul id="cartList"></ul>
+    <p><strong>Total:</strong> <span id="totalPrice">Rp 0</span></p>
+
+    <div class="ai-chat">
+      <h2>🧠 AI Chat (/order)</h2>
+      <input type="text" id="aiInput" placeholder="Ketik /order dan tekan Enter" style="width:100%;padding:10px;margin-top:10px;">
+      <div class="ai-output" id="aiOutput"></div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Apakah file ini auto headshot? <strong>Tidak!</strong></p>
+    <p>Chat WA: <a href="https://wa.me/6282387825683" target="_blank">Klik di sini</a></p>
+    <p>© 2025 XZ.SETTING</p>
+  </footer>
+
+  <script>
+    const productsXZ = [
+      { name: "XZ SETTING V1", price: 25000 },
+      { name: "XZ SETTING V2", price: 40000 },
+      { name: "XZ SETTING V3", price: 50000 },
+      { name: "XZ SETTING VVIP", price: 70000 }
+    ];
+    const productsDrag = [
+      { name: "EASY DRAG 36%", price: 10000 },
+      { name: "EASY DRAG 50%", price: 25000 },
+      { name: "EASY DRAG 67%", price: 40000 },
+      { name: "EASY DRAG 70%", price: 55000 },
+      { name: "EASY DRAG 86%", price: 73000 }
+    ];
+    const detailText = `
+<ul>
+  <li>Smoother hit detection</li>
+  <li>Sliper drag shoot</li>
+  <li>Bullets stick to the head better</li>
+  <li>More flexible aiming</li>
+  <li>Improved X, Y, Z sensitivity</li>
+  <li>Faster animation, reload M1887</li>
+  <li>Set when reload animation starts</li>
+  <li>Set when reload animation stops</li>
+  <li>More stable drag headshot</li>
+</ul>`;
+
+    function renderProduct(container, list, showDetail) {
+      list.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "product";
+        const id = "detail-" + p.name.replace(/\s+/g, "-");
+        div.innerHTML = `
+          <h3 onclick="toggleDetail('${id}')">${p.name}</h3>
+          <p><strong>Rp ${p.price.toLocaleString()}</strong></p>
+          <button onclick="addCart('${p.name}', ${p.price})">Tambah</button>
+          ${showDetail ? `<div class="detail" id="${id}">${detailText}</div>` : ''}
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function toggleDetail(id) {
+      const el = document.getElementById(id);
+      el.style.display = el.style.display === "block" ? "none" : "block";
+    }
+
+    function addCart(name, price) {
+      const item = document.createElement("li");
+      item.textContent = `${name} - Rp ${price.toLocaleString()}`;
+      document.getElementById("cartList").appendChild(item);
+      updateTotal();
+    }
+
+    function updateTotal() {
+      let total = 0;
+      document.querySelectorAll("#cartList li").forEach(li => {
+        const num = parseInt(li.textContent.replace(/[^0-9]/g, ""));
+        total += num;
+      });
+      document.getElementById("totalPrice").textContent = "Rp " + total.toLocaleString();
+    }
+
+    function changeTheme(mode) {
+      document.body.classList.toggle("dark", mode === "dark");
+    }
+
+    renderProduct(document.getElementById("xzList"), productsXZ, true);
+    renderProduct(document.getElementById("dragList"), productsDrag, false);
+
+    document.getElementById("aiInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        const out = document.getElementById("aiOutput");
+        const val = e.target.value.toLowerCase().trim();
+        if (val === "/order") {
+          out.innerHTML = `
+<b>*LIST FILE XZ ANDROID*</b><br>
+• XZ SETTING V1 – 25K<br>
+• XZ SETTING V2 – 40K<br>
+• XZ SETTING V3 – 50K<br>
+• XZ SETTING VVIP – 70K<br><br>
+<b>*LIST FILE EASY DRAG ANDROID*</b><br>
+• EASY DRAG 36% – 10K<br>
+• EASY DRAG 50% – 25K<br>
+• EASY DRAG 67% – 40K<br>
+• EASY DRAG 70% – 55K<br>
+• EASY DRAG 86% – 73K<br><br>
+<b>FUNGSI:</b><br>
+• smoother hit detection<br>
+• sliper drag shoot<br>
+• lebih stabil headshot<br><br>
+<b>Chat WA:</b> <a href="https://wa.me/6282387825683" target="_blank">Klik untuk chat WhatsApp</a>
+          `;
+        } else {
+          out.innerHTML = "Perintah tidak dikenal. Coba ketik <code>/order</code>";
+        }
+        e.target.value = "";
+      }
+    });
+  </script>
+
+</body>
+</html>
